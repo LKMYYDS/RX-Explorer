@@ -59,301 +59,313 @@ namespace FullTrustProcess
 
                 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-                if (args.FirstOrDefault() != "/ExecuteAdminOperation")
+                switch (args.FirstOrDefault())
                 {
-                    Connection = new AppServiceConnection
-                    {
-                        AppServiceName = "CommunicateService",
-                        PackageFamilyName = Package.Current.Id.FamilyName
-                    };
-                    Connection.RequestReceived += Connection_RequestReceived;
-                    Connection.ServiceClosed += Connection_ServiceClosed;
-
-                    AppServiceConnectionStatus Status = Connection.OpenAsync().AsTask().Result;
-
-                    if (Status == AppServiceConnectionStatus.Success)
-                    {
-                        AliveCheckTimer = new Timer(AliveCheck, null, 10000, 10000);
-
-                        try
+                    case "/ExecuteAdminOperation":
                         {
-                            //Loading the menu in advance can speed up the re-generation speed and ensure the stability of the number of menu items
-                            string TempFolderPath = Path.GetTempPath();
+                            string Input = args.LastOrDefault();
 
-                            if (Directory.Exists(TempFolderPath))
+                            if (!string.IsNullOrEmpty(Input))
                             {
-                                ContextMenu.GetContextMenuItems(TempFolderPath);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LogTracer.Log(ex, $"Load menu in advance threw an exception, message: {ex.Message}");
-                        }
-                    }
-                    else
-                    {
-                        LogTracer.Log($"Could not connect to the appservice. Reason: {Enum.GetName(typeof(AppServiceConnectionStatus), Status)}. Exiting...");
-                        ExitLocker.Set();
-                    }
+                                string DataPath = Input.Decrypt("W8aPHu7MGOGA5x5x");
 
-                    ExitLocker.WaitOne();
-                }
-                else
-                {
-                    string Input = args.LastOrDefault();
-
-                    if (!string.IsNullOrEmpty(Input))
-                    {
-                        string DataPath = Input.Decrypt("W8aPHu7MGOGA5x5x");
-
-                        if (File.Exists(DataPath))
-                        {
-                            using (Process CurrentProcess = Process.GetCurrentProcess())
-                            {
-                                string TempFilePath = Path.Combine(Path.GetTempPath(), $"Template_{CurrentProcess.Id}");
-
-                                try
+                                if (File.Exists(DataPath))
                                 {
-                                    string[] InitData = File.ReadAllLines(DataPath);
-
-                                    using (StreamWriter Writer = File.CreateText(TempFilePath))
+                                    using (Process CurrentProcess = Process.GetCurrentProcess())
                                     {
-                                        switch (JsonSerializer.Deserialize(InitData[1], Type.GetType(InitData[0])))
+                                        string TempFilePath = Path.Combine(Path.GetTempPath(), $"Template_{CurrentProcess.Id}");
+
+                                        try
                                         {
-                                            case ElevationCreateNewData NewData:
-                                                {
-                                                    if (StorageController.CheckPermission(Path.GetDirectoryName(NewData.Path) ?? NewData.Path, NewData.Type == CreateType.File ? FileSystemRights.CreateFiles : FileSystemRights.CreateDirectories))
-                                                    {
-                                                        if (StorageController.Create(NewData.Type, NewData.Path))
-                                                        {
-                                                            Writer.WriteLine("Success");
-                                                        }
-                                                        else
-                                                        {
-                                                            Writer.WriteLine("Error_Failure");
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        Writer.WriteLine("Error_NoPermission");
-                                                    }
+                                            string[] InitData = File.ReadAllLines(DataPath);
 
-                                                    break;
-                                                }
-                                            case ElevationCopyData CopyData:
+                                            using (StreamWriter Writer = File.CreateText(TempFilePath))
+                                            {
+                                                switch (JsonSerializer.Deserialize(InitData[1], Type.GetType(InitData[0])))
                                                 {
-                                                    if (CopyData.SourcePath.All((Item) => Directory.Exists(Item) || File.Exists(Item)))
-                                                    {
-                                                        if (StorageController.CheckPermission(CopyData.DestinationPath, FileSystemRights.Modify))
+                                                    case ElevationCreateNewData NewData:
                                                         {
-                                                            List<string> OperationRecordList = new List<string>();
-
-                                                            if (StorageController.Copy(CopyData.SourcePath, CopyData.DestinationPath, CopyData.Option, PostCopyEvent: (se, arg) =>
+                                                            if (StorageController.CheckPermission(Path.GetDirectoryName(NewData.Path) ?? NewData.Path, NewData.Type == CreateType.File ? FileSystemRights.CreateFiles : FileSystemRights.CreateDirectories))
                                                             {
-                                                                if (arg.Result == HRESULT.S_OK)
+                                                                if (StorageController.Create(NewData.Type, NewData.Path))
                                                                 {
-                                                                    if (arg.DestItem == null || string.IsNullOrEmpty(arg.Name))
-                                                                    {
-                                                                        OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Copy||{Path.Combine(arg.DestFolder.FileSystemPath, arg.SourceItem.Name)}");
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Copy||{Path.Combine(arg.DestFolder.FileSystemPath, arg.Name)}");
-                                                                    }
+                                                                    Writer.WriteLine("Success");
                                                                 }
-                                                            }))
-                                                            {
-                                                                Writer.WriteLine("Success");
-                                                                Writer.WriteLine(JsonSerializer.Serialize(OperationRecordList));
+                                                                else
+                                                                {
+                                                                    Writer.WriteLine("Error_Failure");
+                                                                }
                                                             }
                                                             else
                                                             {
-                                                                Writer.WriteLine("Error_Failure");
+                                                                Writer.WriteLine("Error_NoPermission");
                                                             }
-                                                        }
-                                                        else
-                                                        {
-                                                            Writer.WriteLine("Error_NoPermission");
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        Writer.WriteLine("Error_NotFound");
-                                                    }
 
-                                                    break;
-                                                }
-                                            case ElevationMoveData MoveData:
-                                                {
-                                                    if (MoveData.SourcePath.Keys.All((Item) => Directory.Exists(Item) || File.Exists(Item)))
-                                                    {
-                                                        if (MoveData.SourcePath.Keys.Any((Item) => StorageController.CheckCaptured(Item)))
-                                                        {
-                                                            Writer.WriteLine("Error_Capture");
+                                                            break;
                                                         }
-                                                        else
+                                                    case ElevationCopyData CopyData:
                                                         {
-                                                            if (StorageController.CheckPermission(MoveData.DestinationPath, FileSystemRights.Modify)
-                                                                && MoveData.SourcePath.Keys.All((Path) => StorageController.CheckPermission(System.IO.Path.GetDirectoryName(Path) ?? Path, FileSystemRights.Modify)))
+                                                            if (CopyData.SourcePath.All((Item) => Directory.Exists(Item) || File.Exists(Item)))
                                                             {
-                                                                List<string> OperationRecordList = new List<string>();
-
-                                                                if (StorageController.Move(MoveData.SourcePath, MoveData.DestinationPath, MoveData.Option, PostMoveEvent: (se, arg) =>
+                                                                if (StorageController.CheckPermission(CopyData.DestinationPath, FileSystemRights.Modify))
                                                                 {
-                                                                    if (arg.Result == HRESULT.COPYENGINE_S_DONT_PROCESS_CHILDREN)
+                                                                    List<string> OperationRecordList = new List<string>();
+
+                                                                    if (StorageController.Copy(CopyData.SourcePath, CopyData.DestinationPath, CopyData.Option, PostCopyEvent: (se, arg) =>
                                                                     {
-                                                                        if (arg.DestItem == null || string.IsNullOrEmpty(arg.Name))
+                                                                        if (arg.Result == HRESULT.S_OK)
                                                                         {
-                                                                            OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Move||{Path.Combine(arg.DestFolder.FileSystemPath, arg.SourceItem.Name)}");
+                                                                            if (arg.DestItem == null || string.IsNullOrEmpty(arg.Name))
+                                                                            {
+                                                                                OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Copy||{Path.Combine(arg.DestFolder.FileSystemPath, arg.SourceItem.Name)}");
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Copy||{Path.Combine(arg.DestFolder.FileSystemPath, arg.Name)}");
+                                                                            }
+                                                                        }
+                                                                    }))
+                                                                    {
+                                                                        Writer.WriteLine("Success");
+                                                                        Writer.WriteLine(JsonSerializer.Serialize(OperationRecordList));
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        Writer.WriteLine("Error_Failure");
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    Writer.WriteLine("Error_NoPermission");
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                Writer.WriteLine("Error_NotFound");
+                                                            }
+
+                                                            break;
+                                                        }
+                                                    case ElevationMoveData MoveData:
+                                                        {
+                                                            if (MoveData.SourcePath.Keys.All((Item) => Directory.Exists(Item) || File.Exists(Item)))
+                                                            {
+                                                                if (MoveData.SourcePath.Keys.Any((Item) => StorageController.CheckCaptured(Item)))
+                                                                {
+                                                                    Writer.WriteLine("Error_Capture");
+                                                                }
+                                                                else
+                                                                {
+                                                                    if (StorageController.CheckPermission(MoveData.DestinationPath, FileSystemRights.Modify)
+                                                                        && MoveData.SourcePath.Keys.All((Path) => StorageController.CheckPermission(System.IO.Path.GetDirectoryName(Path) ?? Path, FileSystemRights.Modify)))
+                                                                    {
+                                                                        List<string> OperationRecordList = new List<string>();
+
+                                                                        if (StorageController.Move(MoveData.SourcePath, MoveData.DestinationPath, MoveData.Option, PostMoveEvent: (se, arg) =>
+                                                                        {
+                                                                            if (arg.Result == HRESULT.COPYENGINE_S_DONT_PROCESS_CHILDREN)
+                                                                            {
+                                                                                if (arg.DestItem == null || string.IsNullOrEmpty(arg.Name))
+                                                                                {
+                                                                                    OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Move||{Path.Combine(arg.DestFolder.FileSystemPath, arg.SourceItem.Name)}");
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Move||{Path.Combine(arg.DestFolder.FileSystemPath, arg.Name)}");
+                                                                                }
+                                                                            }
+                                                                        }))
+                                                                        {
+                                                                            if (MoveData.SourcePath.Keys.All((Item) => !Directory.Exists(Item) && !File.Exists(Item)))
+                                                                            {
+                                                                                Writer.WriteLine("Success");
+                                                                                Writer.WriteLine(JsonSerializer.Serialize(OperationRecordList));
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                Writer.WriteLine("Error_Capture");
+                                                                            }
                                                                         }
                                                                         else
                                                                         {
-                                                                            OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Move||{Path.Combine(arg.DestFolder.FileSystemPath, arg.Name)}");
+                                                                            Writer.WriteLine("Error_Failure");
                                                                         }
                                                                     }
-                                                                }))
-                                                                {
-                                                                    if (MoveData.SourcePath.Keys.All((Item) => !Directory.Exists(Item) && !File.Exists(Item)))
+                                                                    else
                                                                     {
-                                                                        Writer.WriteLine("Success");
-                                                                        Writer.WriteLine(JsonSerializer.Serialize(OperationRecordList));
+                                                                        Writer.WriteLine("Error_NoPermission");
+                                                                    }
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                Writer.WriteLine("Error_NotFound");
+                                                            }
+
+                                                            break;
+                                                        }
+                                                    case ElevationDeleteData DeleteData:
+                                                        {
+                                                            if (DeleteData.DeletePath.All((Item) => Directory.Exists(Item) || File.Exists(Item)))
+                                                            {
+                                                                if (DeleteData.DeletePath.Any((Item) => StorageController.CheckCaptured(Item)))
+                                                                {
+                                                                    Writer.WriteLine("Error_Capture");
+                                                                }
+                                                                else
+                                                                {
+                                                                    if (DeleteData.DeletePath.All((Path) => StorageController.CheckPermission(System.IO.Path.GetDirectoryName(Path) ?? Path, FileSystemRights.Modify)))
+                                                                    {
+                                                                        List<string> OperationRecordList = new List<string>();
+
+                                                                        if (StorageController.Delete(DeleteData.DeletePath, DeleteData.PermanentDelete, PostDeleteEvent: (se, arg) =>
+                                                                        {
+                                                                            if (!DeleteData.PermanentDelete)
+                                                                            {
+                                                                                OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Delete");
+                                                                            }
+                                                                        }))
+                                                                        {
+                                                                            if (DeleteData.DeletePath.All((Item) => !Directory.Exists(Item) && !File.Exists(Item)))
+                                                                            {
+                                                                                Writer.WriteLine("Success");
+                                                                                Writer.WriteLine(JsonSerializer.Serialize(OperationRecordList));
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                Writer.WriteLine("Error_Capture");
+                                                                            }
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            Writer.WriteLine("Error_Failure");
+                                                                        }
                                                                     }
                                                                     else
                                                                     {
-                                                                        Writer.WriteLine("Error_Capture");
+                                                                        Writer.WriteLine("Error_NoPermission");
                                                                     }
-                                                                }
-                                                                else
-                                                                {
-                                                                    Writer.WriteLine("Error_Failure");
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                Writer.WriteLine("Error_NoPermission");
+                                                                Writer.WriteLine("Error_NotFound");
                                                             }
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        Writer.WriteLine("Error_NotFound");
-                                                    }
 
-                                                    break;
-                                                }
-                                            case ElevationDeleteData DeleteData:
-                                                {
-                                                    if (DeleteData.DeletePath.All((Item) => Directory.Exists(Item) || File.Exists(Item)))
-                                                    {
-                                                        if (DeleteData.DeletePath.Any((Item) => StorageController.CheckCaptured(Item)))
-                                                        {
-                                                            Writer.WriteLine("Error_Capture");
+                                                            break;
                                                         }
-                                                        else
+                                                    case ElevationRenameData RenameData:
                                                         {
-                                                            if (DeleteData.DeletePath.All((Path) => StorageController.CheckPermission(System.IO.Path.GetDirectoryName(Path) ?? Path, FileSystemRights.Modify)))
+                                                            if (File.Exists(RenameData.Path) || Directory.Exists(RenameData.Path))
                                                             {
-                                                                List<string> OperationRecordList = new List<string>();
+                                                                if (StorageController.CheckCaptured(RenameData.Path))
+                                                                {
+                                                                    Writer.WriteLine("Error_Capture");
+                                                                }
+                                                                else
+                                                                {
+                                                                    if (StorageController.CheckPermission(Path.GetDirectoryName(RenameData.Path) ?? RenameData.Path, FileSystemRights.Modify))
+                                                                    {
+                                                                        string NewName = string.Empty;
 
-                                                                if (StorageController.Delete(DeleteData.DeletePath, DeleteData.PermanentDelete, PostDeleteEvent: (se, arg) =>
-                                                                {
-                                                                    if (!DeleteData.PermanentDelete)
-                                                                    {
-                                                                        OperationRecordList.Add($"{arg.SourceItem.FileSystemPath}||Delete");
-                                                                    }
-                                                                }))
-                                                                {
-                                                                    if (DeleteData.DeletePath.All((Item) => !Directory.Exists(Item) && !File.Exists(Item)))
-                                                                    {
-                                                                        Writer.WriteLine("Success");
-                                                                        Writer.WriteLine(JsonSerializer.Serialize(OperationRecordList));
+                                                                        if (StorageController.Rename(RenameData.Path, RenameData.DesireName, (s, e) =>
+                                                                        {
+                                                                            NewName = e.Name;
+                                                                        }))
+                                                                        {
+                                                                            Writer.WriteLine("Success");
+                                                                            Writer.WriteLine(NewName);
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            Writer.WriteLine("Error_Failure");
+                                                                        }
                                                                     }
                                                                     else
                                                                     {
-                                                                        Writer.WriteLine("Error_Capture");
+                                                                        Writer.WriteLine("Error_NoPermission");
                                                                     }
                                                                 }
-                                                                else
-                                                                {
-                                                                    Writer.WriteLine("Error_Failure");
-                                                                }
                                                             }
                                                             else
                                                             {
-                                                                Writer.WriteLine("Error_NoPermission");
+                                                                Writer.WriteLine("Error_NotFound");
                                                             }
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        Writer.WriteLine("Error_NotFound");
-                                                    }
 
-                                                    break;
+                                                            break;
+                                                        }
                                                 }
-                                            case ElevationRenameData RenameData:
-                                                {
-                                                    if (File.Exists(RenameData.Path) || Directory.Exists(RenameData.Path))
-                                                    {
-                                                        if (StorageController.CheckCaptured(RenameData.Path))
-                                                        {
-                                                            Writer.WriteLine("Error_Capture");
-                                                        }
-                                                        else
-                                                        {
-                                                            if (StorageController.CheckPermission(Path.GetDirectoryName(RenameData.Path) ?? RenameData.Path, FileSystemRights.Modify))
-                                                            {
-                                                                string NewName = string.Empty;
-
-                                                                if (StorageController.Rename(RenameData.Path, RenameData.DesireName, (s, e) =>
-                                                                {
-                                                                    NewName = e.Name;
-                                                                }))
-                                                                {
-                                                                    Writer.WriteLine("Success");
-                                                                    Writer.WriteLine(NewName);
-                                                                }
-                                                                else
-                                                                {
-                                                                    Writer.WriteLine("Error_Failure");
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                Writer.WriteLine("Error_NoPermission");
-                                                            }
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        Writer.WriteLine("Error_NotFound");
-                                                    }
-
-                                                    break;
-                                                }
+                                            }
                                         }
+                                        catch (Exception ex)
+                                        {
+                                            LogTracer.Log(ex, $"FullTrustProcess(Elevated) threw an exception, message: {ex.Message}");
+                                            File.Delete(TempFilePath);
+                                        }
+                                        finally
+                                        {
+                                            File.Delete(DataPath);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    throw new InvalidDataException("Init file is missing");
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidDataException("Startup parameter is not correct");
+                            }
+
+                            break;
+                        }
+
+                    case "/UninstallAction":
+                        {
+                            break;
+                        }
+                    default:
+                        {
+                            Connection = new AppServiceConnection
+                            {
+                                AppServiceName = "CommunicateService",
+                                PackageFamilyName = Package.Current.Id.FamilyName
+                            };
+                            Connection.RequestReceived += Connection_RequestReceived;
+                            Connection.ServiceClosed += Connection_ServiceClosed;
+
+                            AppServiceConnectionStatus Status = Connection.OpenAsync().AsTask().Result;
+
+                            if (Status == AppServiceConnectionStatus.Success)
+                            {
+                                AliveCheckTimer = new Timer(AliveCheck, null, 10000, 10000);
+
+                                try
+                                {
+                                    //Loading the menu in advance can speed up the re-generation speed and ensure the stability of the number of menu items
+                                    string TempFolderPath = Path.GetTempPath();
+
+                                    if (Directory.Exists(TempFolderPath))
+                                    {
+                                        ContextMenu.GetContextMenuItems(TempFolderPath);
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    LogTracer.Log(ex, $"FullTrustProcess(Elevated) threw an exception, message: {ex.Message}");
-                                    File.Delete(TempFilePath);
-                                }
-                                finally
-                                {
-                                    File.Delete(DataPath);
+                                    LogTracer.Log(ex, $"Load menu in advance threw an exception, message: {ex.Message}");
                                 }
                             }
+                            else
+                            {
+                                LogTracer.Log($"Could not connect to the appservice. Reason: {Enum.GetName(typeof(AppServiceConnectionStatus), Status)}. Exiting...");
+                                ExitLocker.Set();
+                            }
+
+                            ExitLocker.WaitOne();
+
+                            break;
                         }
-                        else
-                        {
-                            throw new InvalidDataException("Init file is missing");
-                        }
-                    }
-                    else
-                    {
-                        throw new InvalidDataException("Startup parameter is not correct");
-                    }
                 }
             }
             catch (Exception ex)

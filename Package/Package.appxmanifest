@@ -12,7 +12,9 @@
   xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
   xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
   xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
-  IgnorableNamespaces="uap mp desktop uap5 rescap desktop5 com desktop4 iot2 uap3">
+  xmlns:uap4="http://schemas.microsoft.com/appx/manifest/uap/windows10/4"
+  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+  IgnorableNamespaces="uap mp desktop uap5 rescap desktop5 com desktop4 desktop6 iot2 uap3">
 
   <Identity
     Name="36186RuoFan.USB"
@@ -103,16 +105,28 @@
       </Extensions>
     </Application>
   </Applications>
-
+	
+  <Extensions>
+    <desktop6:Extension Category="windows.customInstall">
+	  <desktop6:CustomInstall Folder="FullTrustProcess">
+	    <desktop6:UninstallActions>
+		  <desktop6:UninstallAction File="FullTrustProcess.exe" Name="UA" Arguments="/UninstallAction" />
+		</desktop6:UninstallActions>
+	  </desktop6:CustomInstall>
+	</desktop6:Extension>
+  </Extensions>
+	
   <Capabilities>
     <rescap:Capability Name="confirmAppClose"/>
     <rescap:Capability Name="runFullTrust" />
     <rescap:Capability Name="broadFileSystemAccess" />
-    <Capability Name="internetClientServer"/>
+	<rescap:Capability Name="customInstallActions"/>
+	<Capability Name="internetClientServer"/>
     <Capability Name="privateNetworkClientServer" />
     <uap:Capability Name="removableStorage"/>
     <uap3:Capability Name="backgroundMediaPlayback"/>
-    <DeviceCapability Name="bluetooth"/>
+	<uap4:CustomCapability Name="Microsoft.classicAppInstaller_8wekyb3d8bbwe" />
+	<DeviceCapability Name="bluetooth"/>
     <DeviceCapability Name="6AC27878-A6FA-4155-BA85-F98F491D4F33"/>
     <DeviceCapability Name="BA0C718F-4DED-49B7-BDD3-FABE28661211"/>
     <DeviceCapability Name="6BDD1FC6-810F-11D0-BEC7-08002BE2092F"/>
