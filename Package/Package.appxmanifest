@@ -108,9 +108,9 @@
 	
   <Extensions>
     <desktop6:Extension Category="windows.customInstall">
-	  <desktop6:CustomInstall Folder="FullTrustProcess">
+	  <desktop6:CustomInstall Folder="UninstallAction">
 	    <desktop6:UninstallActions>
-		  <desktop6:UninstallAction File="FullTrustProcess.exe" Name="UA" Arguments="/UninstallAction" />
+		  <desktop6:UninstallAction File="UninstallAction.exe" Name="UA" Arguments="/UninstallAction" />
 		</desktop6:UninstallActions>
 	  </desktop6:CustomInstall>
 	</desktop6:Extension>

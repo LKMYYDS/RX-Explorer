@@ -128,6 +128,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FullTrustProcess\FullTrustProcess.csproj" />
     <ProjectReference Include="..\RX_Explorer\RX_Explorer.csproj" />
+    <ProjectReference Include="..\UninstallAction\UninstallAction.csproj" />
   </ItemGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
 </Project>

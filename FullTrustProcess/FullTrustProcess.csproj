@@ -1,63 +1,81 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net6.0-windows10.0.19041</TargetFramework>
-    <OutputType>WinExe</OutputType>
-    <LangVersion>9.0</LangVersion>
-    <Platforms>x64;ARM64</Platforms>
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM64'">
-    <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
-    <RuntimeIdentifier>win-arm64</RuntimeIdentifier>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
-  <PropertyGroup>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Include="..\.editorconfig">
-      <Link>.editorconfig</Link>
-    </None>
-	<Content Include="Everything64.dll">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Content>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="MimeTypeMapOfficial" Version="1.0.17" />
-    <PackageReference Include="Vanara.PInvoke.CfgMgr32">
-      <Version>3.3.14</Version>
-    </PackageReference>
-    <PackageReference Include="Vanara.PInvoke.Mpr">
-      <Version>3.3.14</Version>
-    </PackageReference>
-    <PackageReference Include="Vanara.PInvoke.Msi">
-      <Version>3.3.14</Version>
-    </PackageReference>
-    <PackageReference Include="Vanara.PInvoke.NtDll">
-      <Version>3.3.14</Version>
-    </PackageReference>
-    <PackageReference Include="Vanara.PInvoke.RstrtMgr">
-      <Version>3.3.14</Version>
-    </PackageReference>
-    <PackageReference Include="Vanara.PInvoke.UserEnv">
-      <Version>3.3.14</Version>
-    </PackageReference>
-    <PackageReference Include="Vanara.Windows.Shell">
-      <Version>3.3.14</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ShareClassLibrary\ShareClassLibrary.csproj" />
-  </ItemGroup>
-  <PropertyGroup />
+	<PropertyGroup>
+		<TargetFramework>net6.0-windows10.0.19041</TargetFramework>
+		<OutputType>WinExe</OutputType>
+		<LangVersion>9.0</LangVersion>
+		<Platforms>x64;ARM64</Platforms>
+		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<UseWindowsForms>true</UseWindowsForms>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>true</PublishSingleFile>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM64'">
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>true</PublishSingleFile>
+		<RuntimeIdentifier>win-arm64</RuntimeIdentifier>
+	</PropertyGroup>
+	<PropertyGroup>
+		<StartupObject />
+	</PropertyGroup>
+	<PropertyGroup>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="RegFiles\Intercept_Folder.reg" />
+	  <None Remove="RegFiles\Intercept_WIN_E.reg" />
+	  <None Remove="RegFiles\Restore_Folder.reg" />
+	  <None Remove="RegFiles\Restore_WIN_E.reg" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\.editorconfig">
+			<Link>.editorconfig</Link>
+		</None>
+		<Content Include="Everything64.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="RegFiles\Intercept_Folder.reg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="RegFiles\Intercept_WIN_E.reg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="RegFiles\Restore_Folder.reg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="RegFiles\Restore_WIN_E.reg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="MimeTypeMapOfficial" Version="1.0.17" />
+		<PackageReference Include="Vanara.PInvoke.CfgMgr32">
+			<Version>3.3.14</Version>
+		</PackageReference>
+		<PackageReference Include="Vanara.PInvoke.Mpr">
+			<Version>3.3.14</Version>
+		</PackageReference>
+		<PackageReference Include="Vanara.PInvoke.Msi">
+			<Version>3.3.14</Version>
+		</PackageReference>
+		<PackageReference Include="Vanara.PInvoke.NtDll">
+			<Version>3.3.14</Version>
+		</PackageReference>
+		<PackageReference Include="Vanara.PInvoke.RstrtMgr">
+			<Version>3.3.14</Version>
+		</PackageReference>
+		<PackageReference Include="Vanara.PInvoke.UserEnv">
+			<Version>3.3.14</Version>
+		</PackageReference>
+		<PackageReference Include="Vanara.Windows.Shell">
+			<Version>3.3.14</Version>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\ShareClassLibrary\ShareClassLibrary.csproj" />
+	</ItemGroup>
+	<PropertyGroup />
 </Project>

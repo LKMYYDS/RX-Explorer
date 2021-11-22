@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaintenanceTask", "Maintena
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShareClassLibrary", "ShareClassLibrary\ShareClassLibrary.csproj", "{57848D87-5F61-4150-B6DC-56A87AC0AEAE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UninstallAction", "UninstallAction\UninstallAction.csproj", "{F7C154A7-CF08-4F97-B678-50AAF0A0497F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -69,8 +71,8 @@ Global
 		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Debug|ARM64.Build.0 = Debug|ARM64
 		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Debug|x64.ActiveCfg = Debug|x64
 		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Debug|x64.Build.0 = Debug|x64
-		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Release|ARM64.ActiveCfg = Release|arm64
-		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Release|ARM64.Build.0 = Release|arm64
+		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Release|ARM64.ActiveCfg = Release|ARM64
+		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Release|ARM64.Build.0 = Release|ARM64
 		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Release|x64.ActiveCfg = Release|x64
 		{04F23FCE-9DCC-4B3E-B088-F1016F628C65}.Release|x64.Build.0 = Release|x64
 		{7D62AF29-E32F-4402-88E5-D8FEEB062728}.Debug|ARM64.ActiveCfg = Debug|ARM64
@@ -125,6 +127,14 @@ Global
 		{57848D87-5F61-4150-B6DC-56A87AC0AEAE}.Release|ARM64.Build.0 = Release|Any CPU
 		{57848D87-5F61-4150-B6DC-56A87AC0AEAE}.Release|x64.ActiveCfg = Release|Any CPU
 		{57848D87-5F61-4150-B6DC-56A87AC0AEAE}.Release|x64.Build.0 = Release|Any CPU
+		{F7C154A7-CF08-4F97-B678-50AAF0A0497F}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{F7C154A7-CF08-4F97-B678-50AAF0A0497F}.Debug|ARM64.Build.0 = Debug|ARM64
+		{F7C154A7-CF08-4F97-B678-50AAF0A0497F}.Debug|x64.ActiveCfg = Debug|x64
+		{F7C154A7-CF08-4F97-B678-50AAF0A0497F}.Debug|x64.Build.0 = Debug|x64
+		{F7C154A7-CF08-4F97-B678-50AAF0A0497F}.Release|ARM64.ActiveCfg = Release|ARM64
+		{F7C154A7-CF08-4F97-B678-50AAF0A0497F}.Release|ARM64.Build.0 = Release|ARM64
+		{F7C154A7-CF08-4F97-B678-50AAF0A0497F}.Release|x64.ActiveCfg = Release|x64
+		{F7C154A7-CF08-4F97-B678-50AAF0A0497F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
